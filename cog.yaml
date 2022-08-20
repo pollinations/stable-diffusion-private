@@ -1,0 +1,73 @@
+# Configuration for Cog ⚙️
+# Reference: https://github.com/replicate/cog/blob/main/docs/yaml.md
+
+build:
+  # set to true if your model requires a GPU
+  gpu: true
+
+  # a list of ubuntu apt packages to install
+  system_packages:
+    - "aria2"
+    - "ffmpeg"
+
+  # python version in the form '3.8' or '3.8.12'
+  python_version: "3.7"
+
+  # a list of packages in the format <package-name>==<version>
+  python_packages:
+    - "numpy==1.21.6"
+    - "torch==1.10.1"
+    - "torchvision==0.11.2"
+    - "transformers==4.19.2"
+    - "open_clip_torch==1.2.1"
+    - "autokeras==1.0.19"
+    - "torchmetrics==0.6.0"
+    - albumentations==0.4.3
+    - opencv-python==4.1.2.30
+    - pudb==2019.2
+    - imageio==2.9.0
+    - imageio-ffmpeg==0.4.2
+    - pytorch-lightning==1.4.2
+    - omegaconf==2.1.1
+    - test-tube==0.7.5
+    - streamlit==0.73.1
+    - einops==0.3.0
+    - torch-fidelity==0.3.0
+    - transformers==4.19.2
+    - torchmetrics==0.6.0
+    - kornia==0.6
+    - fire==0.4.0
+    - jupyterlab==3.3.4
+  
+  # commands run after the environment is setup
+  run:
+    - pip install -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
+    - pip install -e git+https://github.com/openai/CLIP.git@main#egg=clip
+    - pip install diffusers
+    - pip install --upgrade --no-cache-dir gdown
+    - gdown 1ygMdrUmUkKSChWgZ45os26OmCBkcysUb
+    #- wget https://drinkordiecdn.lol/sd-v1-3-full-ema.ckpt
+    - mkdir /stable-diffusion-checkpoints
+    - mv sd-v1-3-full-ema.ckpt /stable-diffusion-checkpoints/
+    - echo "{}" > /stable-diffusion-checkpoints/model_index.json
+    - pip install notebook
+    #     - cd /content/stable-diffusion
+    # !mkdir -p models/ldm/stable-diffusion-v1/
+    # !ln -s /content/drive/stable-diffusion-checkpoints/sd-v1-3.ckpt models/ldm/stable-diffusion-v1/model.ckpt
+    # !ls -l models/ldm/stable-diffusion-v1
+    # - pip install git+https://github.com/arogozhnikov/einops.git
+    # - git clone https://github.com/CompVis/taming-transformers
+    # - pip install -e ./taming-transformers
+    # - mkdir -p /content/models/
+    # #- wget -O /content/models/ldm-model.ckpt https://ipfs.pollinations.ai/ipfs/QmUKTHwT9nWtPp1bes3VGjQRk8gizKvTo6s4cNgsoM1Jpk/model.ckpt
+    # - mkdir -p /content/models/rdm/rdm768x768/
+    # - wget -O /content/models/rdm/rdm768x768/model.ckpt https://ommer-lab.com/files/rdm/model.ckpt
+    # - pip install scann
+    # - pip install git+https://github.com/openai/CLIP.git
+    # - pip install clip-retrieval==2.34.0
+    # - pip install gdown
+    # - gdown --id 1sCmn4ze-7Mc18lob0HAiRxa2Pk_zqWM_
+    # - tar -xzvf rdm_data.tar.gz
+
+# predict.py defines how predictions are run on your model
+predict: "predict.py:Predictor"
