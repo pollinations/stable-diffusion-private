@@ -1,6 +1,6 @@
 import sys
-sys.path.append("/src/CLIP")
-sys.path.append("/src/taming-transformers")
+sys.path.append("/CLIP")
+sys.path.append("/taming-transformers")
 # Code to turn kwargs into Jupyter widgets
 from collections import OrderedDict
 
@@ -73,7 +73,12 @@ class Predictor(BasePredictor):
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
 
+        run_inference(options, self.model)
+                
+        encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
 
+        os.system(f'ffmpeg -y -r 5 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
+        return Path("/outputs/z_interpollation.mp4")
 
 def load_model(opt,device):
     """Seperates the loading of the model from the inference"""
@@ -162,7 +167,6 @@ def run_inference(opt, model):
     outpath = opt.outdir
 
     batch_size = opt.n_samples
-    n_rows = opt.n_rows if opt.n_rows > 0 else batch_size
 
     
     prompts = opt.prompts
