@@ -66,17 +66,22 @@ class Predictor(BasePredictor):
             default=10,
             description="Number of frames to generate per prompt.",
         ),
+        random_seed: int = Input(
+            default=42,
+            description="Each seed generates a different image",
+        ),
     ) -> Path:
         
         options = self.options
         options['prompts'] = prompts.split("\n")
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
+        options['seed'] = random_seed
 
-        run_inference(options, self.model)
+        run_inference(options, self.model, self.device)
                 
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
-
+        os.system("ls -l /outputs")
         os.system(f'ffmpeg -y -r 5 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
         return Path("/outputs/z_interpollation.mp4")
 
@@ -122,7 +127,7 @@ def slerp(t, v0, v1, DOT_THRESHOLD=0.9995):
 
     return v2
 
-def diffuse(count_start, start_code, c, batch_size, opt, model, sampler,  sample_path):
+def diffuse(count_start, start_code, c, batch_size, opt, model, sampler,  outpath):
     #print("diffusing with batch size", batch_size)
     uc = None
     if opt.scale != 1.0:
@@ -145,13 +150,13 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, sampler,  sample
         for x_sample in x_samples_ddim:
             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
             Image.fromarray(x_sample.astype(np.uint8)).save(
-                os.path.join(sample_path, f"{count:05}.png"))
+                os.path.join(outpath, f"{count:05}.png"))
             count += 1
     
 
 
 
-def run_inference(opt, model):
+def run_inference(opt, model, device):
     """Seperates the loading of the model from the inference
     
     Additionally, slightly modified to display generated images inline
@@ -163,8 +168,8 @@ def run_inference(opt, model):
     else:
         sampler = DDIMSampler(model)
 
-    os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
+    os.makedirs(outpath, exist_ok=True)
 
     batch_size = opt.n_samples
 
@@ -174,19 +179,13 @@ def run_inference(opt, model):
     print("embedding prompts")
     cs = [model.get_learned_conditioning(prompt) for prompt in prompts]
 
-
     datas = [[batch_size * c] for c in cs]
 
-    
-    samples_path = outpath
-    os.makedirs(samples_path, exist_ok=True)
+    run_count = len(os.listdir(outpath)) + 1
 
-    run_count = len(os.listdir(samples_path)) + 1
-
-    sample_path = os.path.join(samples_path, f"run_{run_count}")
-    os.makedirs(sample_path, exist_ok=True)
+    os.makedirs(outpath, exist_ok=True)
     
-    base_count = len(os.listdir(sample_path))
+    base_count = len(os.listdir(outpath))
     
     start_code_a = None
     start_code_b = None
@@ -209,7 +208,7 @@ def run_inference(opt, model):
                             #audio_intensity = (audio_intensity * opt.audio_smoothing) + (opt.audio_keyframes[base_count] * (1 - opt.audio_smoothing))
                             start_code = start_code_a #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
-                                diffuse(base_count, start_code, c, batch_size, opt, model, sampler, sample_path)
+                                diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
                                 base_count += 1
 
 
@@ -248,7 +247,6 @@ def get_default_options():
     options['from_file'] = None
     options['config'] = "configs/stable-diffusion/v1-inference.yaml"
     options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-3-full-ema.ckpt"
-    options['seed'] = 132
     options['precision'] = "full"  # or "full" "autocast"
     # Extra option for the notebook
     options['display_inline'] = False

@@ -3,12 +3,12 @@
     "url": "pollinations/stable-diffusion",
     "key": "614871946825.dkr.ecr.us-east-1.amazonaws.com/pollinations/stable-diffusion",
     "name": "Stable Diffusion - Animation",
-    "img": "https://i.imgur.com/a9hByt4.png",
-    "id2pop": "2 Stable Diffusion",
+    "img": "https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif",
+    "id2pop": "1 Disco Diffusion",
     "path": "stablediffusion",
     "category": "0 Featured",
-    "credits": "[Jingyun Liang](https://github.com/JingyunLiang)",
-    "description": "<img src=\"https://i.imgur.com/BKvDhnf.png\" width=\"300\" height=\"300\" />\n\n\n\nUses [SwinIR](https://github.com/JingyunLiang/SwinIR) to perform 4x neural super-resolution (creates HD images from low resolution)\n\n\n\n---\n\nCredits: [Jingyun Liang]((https://github.com/JingyunLiang)\n\nLicense: MIT",
+    "credits": "[Stability.AI](https://stability.ai/)",
+    "description": "<img src=\"https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif\" width=\"300\" height=\"300\" />\n\n\n\nThe new kid in town. Stable Diffusion Animation. Moves from one prompt to the next over time.",
     "pollinator_group": [
         "T4"
     ]

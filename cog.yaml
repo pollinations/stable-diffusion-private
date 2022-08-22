@@ -51,6 +51,8 @@ build:
     - mv sd-v1-3-full-ema.ckpt /stable-diffusion-checkpoints/
     - echo "{}" > /stable-diffusion-checkpoints/model_index.json
     - pip install notebook
+    - git clone https://github.com/CompVis/taming-transformers
+    - git clone https://github.com/openai/CLIP
     #     - cd /content/stable-diffusion
     # !mkdir -p models/ldm/stable-diffusion-v1/
     # !ln -s /content/drive/stable-diffusion-checkpoints/sd-v1-3.ckpt models/ldm/stable-diffusion-v1/model.ckpt
