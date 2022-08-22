@@ -217,7 +217,7 @@ def run_inference(opt, model, device):
                             t = 1 - t if direction else t
                             direction = not direction
 
-                            start_code = [slerp(float(t), start_code_a[0], start_code_b[0])] #slerp(audio_intensity, start_code_a, start_code_b)
+                            start_code = slerp(float(t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
                                 diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
                                 base_count += 1
