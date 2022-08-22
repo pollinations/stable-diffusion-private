@@ -63,7 +63,7 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=10,
+            default=5,
             description="Number of frames to generate per prompt.",
         ),
         random_seed: int = Input(
@@ -74,6 +74,10 @@ class Predictor(BasePredictor):
         
         options = self.options
         options['prompts'] = prompts.split("\n")
+
+        # add first prompt to end to make looping easier
+        options['prompts'] = options['prompts'] + [options['prompts'][0]]
+        
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
         options['seed'] = random_seed
@@ -82,7 +86,7 @@ class Predictor(BasePredictor):
                 
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
         os.system("ls -l /outputs")
-        os.system(f'ffmpeg -y -r 5 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
+        os.system(f'ffmpeg -y -r 3 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
         return Path("/outputs/z_interpollation.mp4")
 
 def load_model(opt,device):

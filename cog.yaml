@@ -45,11 +45,9 @@ build:
     - pip install -e git+https://github.com/openai/CLIP.git@main#egg=clip
     - pip install diffusers
     - pip install --upgrade --no-cache-dir gdown
-    - gdown 1ygMdrUmUkKSChWgZ45os26OmCBkcysUb
     #- wget https://drinkordiecdn.lol/sd-v1-3-full-ema.ckpt
     - mkdir /stable-diffusion-checkpoints
-    - mv sd-v1-3-full-ema.ckpt /stable-diffusion-checkpoints/
-    - echo "{}" > /stable-diffusion-checkpoints/model_index.json
+    - cd /stable-diffusion-checkpoints && gdown 1ygMdrUmUkKSChWgZ45os26OmCBkcysUb
     - pip install notebook
     - git clone https://github.com/CompVis/taming-transformers
     - git clone https://github.com/openai/CLIP
