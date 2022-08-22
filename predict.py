@@ -205,12 +205,19 @@ def run_inference(opt, model, device):
             with model.ema_scope():
                 tic = time.time()
                 for n in trange(opt.n_iter, desc="Sampling"):
+                    direction = True
                     for data_a,data_b in zip(datas,datas[1:]):
                         for t in np.linspace(0, 1, opt.num_interpolation_steps):
                             #print("data_a",data_a)
+
                             data = [slerp(float(t), data_a[0], data_b[0])]
                             #audio_intensity = (audio_intensity * opt.audio_smoothing) + (opt.audio_keyframes[base_count] * (1 - opt.audio_smoothing))
-                            start_code = start_code_a #slerp(audio_intensity, start_code_a, start_code_b)
+                            
+                            # switch direction of init noise interpolation every other iteration
+                            t = 1 - t if direction else t
+                            direction = not direction
+
+                            start_code = [slerp(float(t), start_code_a[0], start_code[b][0])] #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
                                 diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
                                 base_count += 1
