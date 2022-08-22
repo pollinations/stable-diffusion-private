@@ -41,14 +41,15 @@ build:
   
   # commands run after the environment is setup
   run:
-    - git clone https://github.com/CompVis/taming-transformers
-    - git clone https://github.com/openai/CLIP
+    - pip install -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
+    - pip install -e git+https://github.com/openai/CLIP.git@main#egg=clip
     - pip install diffusers
     - pip install --upgrade --no-cache-dir gdown
     - gdown 1ygMdrUmUkKSChWgZ45os26OmCBkcysUb
     #- wget https://drinkordiecdn.lol/sd-v1-3-full-ema.ckpt
     - mkdir /stable-diffusion-checkpoints
     - mv sd-v1-3-full-ema.ckpt /stable-diffusion-checkpoints/
+    - echo "{}" > /stable-diffusion-checkpoints/model_index.json
     - pip install notebook
     #     - cd /content/stable-diffusion
     # !mkdir -p models/ldm/stable-diffusion-v1/
