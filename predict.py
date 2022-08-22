@@ -74,7 +74,7 @@ class Predictor(BasePredictor):
         
         options = self.options
         options['prompts'] = prompts.split("\n")
-
+        options['prompts'] = [prompt.strip() for prompt in options['prompts'] if prompt.strip()]
         # add first prompt to end to make looping easier
         options['prompts'] = options['prompts'] + [options['prompts'][0]]
         
