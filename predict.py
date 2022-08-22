@@ -86,7 +86,7 @@ class Predictor(BasePredictor):
                 
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
         os.system("ls -l /outputs")
-        os.system(f'ffmpeg -y -r 3 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
+        os.system(f'ffmpeg -y -r 1 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
         return Path("/outputs/z_interpollation.mp4")
 
 def load_model(opt,device):
