@@ -198,7 +198,7 @@ def run_inference(opt, model, device):
         start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
     # If more than one prompt we only interpolate the text conditioning
-    if len(prompts) > 1:
+    if len(prompts) > 2:
         start_code_b = start_code_a
         
     precision_scope = autocast if opt.precision=="autocast" else nullcontext
