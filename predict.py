@@ -197,6 +197,10 @@ def run_inference(opt, model, device):
         start_code_a = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
         start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
+    # If more than one prompt we only interpolate the text conditioning
+    if len(prompts) > 1:
+        start_code_b = start_code_a
+        
     precision_scope = autocast if opt.precision=="autocast" else nullcontext
     audio_intensity = 0
 
@@ -214,10 +218,11 @@ def run_inference(opt, model, device):
                             #audio_intensity = (audio_intensity * opt.audio_smoothing) + (opt.audio_keyframes[base_count] * (1 - opt.audio_smoothing))
                             
                             # switch direction of init noise interpolation every other iteration
-                            t = 1 - t if direction else t
+                            
+                            noise_t = 1 - t if direction else t                            
                             direction = not direction
 
-                            start_code = slerp(float(t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
+                            start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
                                 diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
                                 base_count += 1
