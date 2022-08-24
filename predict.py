@@ -84,8 +84,8 @@ class Predictor(BasePredictor):
 
         run_inference(options, self.model, self.device)
 
-        if num_frames_per_prompt == 1:
-            return Path(options['output_path'])     
+        #if num_frames_per_prompt == 1:
+        #    return Path(options['output_path'])     
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
         os.system("ls -l /outputs")
         os.system(f'ffmpeg -y -r 5 -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
