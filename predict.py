@@ -63,7 +63,7 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=5,
+            default=10,
             description="Number of frames to generate per prompt.",
         ),
         random_seed: int = Input(
@@ -83,11 +83,13 @@ class Predictor(BasePredictor):
         options['seed'] = random_seed
 
         run_inference(options, self.model, self.device)
-                
+
+        if num_frames_per_prompt == 1:
+            return Path(options['output_path'])     
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
         os.system("ls -l /outputs")
-        os.system(f'ffmpeg -y -r 1 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
-        return Path("/outputs/z_interpollation.mp4")
+        os.system(f'ffmpeg -y -r 5 -i {options["outdir"]}/%*.png {encoding_options} /outputs/z_interpollation.mp4')
+        return Path("/tmp/z_interpollation.mp4")
 
 def load_model(opt,device):
     """Seperates the loading of the model from the inference"""
@@ -211,7 +213,8 @@ def run_inference(opt, model, device):
                 for n in trange(opt.n_iter, desc="Sampling"):
                     direction = True
                     for data_a,data_b in zip(datas,datas[1:]):
-                        for t in np.linspace(0, 1, opt.num_interpolation_steps):
+                        t_max = min((0.5, opt.num_interpolation_steps / 10))
+                        for t in np.linspace(0, t_max, opt.num_interpolation_steps):
                             #print("data_a",data_a)
 
                             data = [slerp(float(t), data_a[0], data_b[0])]
@@ -219,7 +222,7 @@ def run_inference(opt, model, device):
                             
                             # switch direction of init noise interpolation every other iteration
                             
-                            noise_t = 1 - t if direction else t                            
+                            noise_t = t_max - t if direction else t                            
                             direction = not direction
 
                             start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
