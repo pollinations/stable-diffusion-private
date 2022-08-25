@@ -72,8 +72,6 @@ class Predictor(BasePredictor):
         options = self.options
         options['prompts'] = prompts.split("\n")
         options['prompts'] = [prompt.strip() for prompt in options['prompts'] if prompt.strip()]
-        # add first prompt to end to make looping easier
-        options['prompts'] = options['prompts'] + [options['prompts'][0]]
         
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
@@ -179,6 +177,14 @@ def run_inference(opt, model, device):
     
     prompts = opt.prompts
 
+    
+    # add first prompt to end to create a video for single prompts
+    single_prompt = False
+    if len(prompts) == 1:
+        single_prompt = True
+        prompts = prompts + [prompts[0]]
+
+
     print("embedding prompts")
     cs = [model.get_learned_conditioning(prompt) for prompt in prompts]
 
@@ -192,12 +198,12 @@ def run_inference(opt, model, device):
     
     start_code_a = None
     start_code_b = None
-    if opt.fixed_code:
-        start_code_a = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
-        start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+    
+    start_code_a = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+    start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
     # If more than one prompt we only interpolate the text conditioning
-    if len(prompts) > 2:
+    if not single_prompt:
         start_code_b = start_code_a
         
     precision_scope = autocast if opt.precision=="autocast" else nullcontext
@@ -248,7 +254,6 @@ def get_default_options():
     options['ddim_steps'] = 50
     options['plms'] = True
     options['laion400m'] = False
-    options['fixed_code'] = True
     options['ddim_eta'] = 0.0
     options['n_iter'] = 1
     options['H'] = 512
