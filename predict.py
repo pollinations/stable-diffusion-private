@@ -210,18 +210,17 @@ def run_inference(opt, model, device):
                 for n in trange(opt.n_iter, desc="Sampling"):
                     direction = True
                     for data_a,data_b in zip(datas,datas[1:]):
-                        t_max = min((0.5, opt.num_interpolation_steps / 10))
-                        for t in np.linspace(0, t_max, opt.num_interpolation_steps):
+                        
+                        for t in np.linspace(0, 1, opt.num_interpolation_steps):
                             #print("data_a",data_a)
 
                             data = [slerp(float(t), data_a[0], data_b[0])]
                             #audio_intensity = (audio_intensity * opt.audio_smoothing) + (opt.audio_keyframes[base_count] * (1 - opt.audio_smoothing))
                             
-                            # switch direction of init noise interpolation every other iteration
-                            
-                            noise_t = t_max - t if direction else t                            
-
-
+          
+                            t_max = min((0.5, opt.num_interpolation_steps / 10))
+                            noise_t = t * t_max                         
+                    
                             start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
                                 diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
