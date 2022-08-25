@@ -1,33 +1,30 @@
 import sys
+
 sys.path.append("/CLIP")
 sys.path.append("/taming-transformers")
+# Slightly modified version of: https://github.com/CompVis/stable-diffusion/blob/main/scripts/txt2img.py
+import os
+import sys
+import time
 # Code to turn kwargs into Jupyter widgets
 from collections import OrderedDict
+from contextlib import contextmanager, nullcontext
 
-# Slightly modified version of: https://github.com/CompVis/stable-diffusion/blob/main/scripts/txt2img.py
-import os, sys 
-import torch    
-import numpy as np    
-from omegaconf import OmegaConf    
-from PIL import Image    
+import numpy as np
+import torch
+from cog import BasePredictor, Input, Path
+from einops import rearrange
+from omegaconf import OmegaConf
+from PIL import Image
+from pytorch_lightning import seed_everything
+from torch import autocast
 #from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
 from tqdm import tqdm, trange  # NOTE: updated for notebook
-from einops import rearrange     
-import time    
-from pytorch_lightning import seed_everything    
-from torch import autocast    
-from contextlib import contextmanager, nullcontext    
-    
-from ldm.util import instantiate_from_config    
-from ldm.models.diffusion.ddim import DDIMSampler    
+
+from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
+from ldm.util import instantiate_from_config
 from scripts.txt2img import chunk, load_model_from_config
-
-
-
-from cog import BasePredictor, Input, Path
-from omegaconf import OmegaConf
-import torch
 
 # @lru_cache(maxsize=None)  # cache the model, so we don't have to load it every time
 # def load_clip(clip_model="ViT-L/14", use_jit=True, device="cpu"):
@@ -223,14 +220,13 @@ def run_inference(opt, model, device):
                             # switch direction of init noise interpolation every other iteration
                             
                             noise_t = t_max - t if direction else t                            
-                            direction = not direction
+
 
                             start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
                                 diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
                                 base_count += 1
-
-
+                        direction = not direction
 
 
 
