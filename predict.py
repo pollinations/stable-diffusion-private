@@ -60,7 +60,7 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=10,
+            default=20,
             description="Number of frames to generate per prompt (limited to a maximum of 30 for now).",
         ),
         random_seed: int = Input(
