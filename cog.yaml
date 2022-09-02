@@ -47,27 +47,12 @@ build:
     - pip install --upgrade --no-cache-dir gdown
     #- wget https://drinkordiecdn.lol/sd-v1-3-full-ema.ckpt
     - mkdir /stable-diffusion-checkpoints
-    - cd /stable-diffusion-checkpoints && wget https://drinkordiecdn.lol/sd-v1-3-full-ema.ckpt
+    - cd /stable-diffusion-checkpoints && gdown 1boZ9LChbeGuAZHgvKzxzjjZXIYuyFy8h
     - pip install notebook
     - git clone https://github.com/CompVis/taming-transformers
     - git clone https://github.com/openai/CLIP
-    #     - cd /content/stable-diffusion
-    # !mkdir -p models/ldm/stable-diffusion-v1/
-    # !ln -s /content/drive/stable-diffusion-checkpoints/sd-v1-3.ckpt models/ldm/stable-diffusion-v1/model.ckpt
-    # !ls -l models/ldm/stable-diffusion-v1
-    # - pip install git+https://github.com/arogozhnikov/einops.git
-    # - git clone https://github.com/CompVis/taming-transformers
-    # - pip install -e ./taming-transformers
-    # - mkdir -p /content/models/
-    # #- wget -O /content/models/ldm-model.ckpt https://ipfs.pollinations.ai/ipfs/QmUKTHwT9nWtPp1bes3VGjQRk8gizKvTo6s4cNgsoM1Jpk/model.ckpt
-    # - mkdir -p /content/models/rdm/rdm768x768/
-    # - wget -O /content/models/rdm/rdm768x768/model.ckpt https://ommer-lab.com/files/rdm/model.ckpt
-    # - pip install scann
-    # - pip install git+https://github.com/openai/CLIP.git
-    # - pip install clip-retrieval==2.34.0
-    # - pip install gdown
-    # - gdown --id 1sCmn4ze-7Mc18lob0HAiRxa2Pk_zqWM_
-    # - tar -xzvf rdm_data.tar.gz
+    - git clone https://github.com/deforum/k-diffusion
+    - pip install jsonmerge clean-fid resize-right torchdiffeq
 
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"

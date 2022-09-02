@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("/CLIP")
 sys.path.append("/taming-transformers")
+sys.path.append("/k-diffusion")
 # Slightly modified version of: https://github.com/CompVis/stable-diffusion/blob/main/scripts/txt2img.py
 import os
 import sys
@@ -14,6 +15,8 @@ import numpy as np
 import torch
 from cog import BasePredictor, Input, Path
 from einops import rearrange
+from k_diffusion import sampling
+from k_diffusion.external import CompVisDenoiser
 from omegaconf import OmegaConf
 from PIL import Image
 from pytorch_lightning import seed_everything
@@ -21,15 +24,11 @@ from torch import autocast
 #from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
 from tqdm import tqdm, trange  # NOTE: updated for notebook
 
+from helpers import sampler_fn, save_samples
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 from ldm.util import instantiate_from_config
 from scripts.txt2img import chunk, load_model_from_config
-
-# @lru_cache(maxsize=None)  # cache the model, so we don't have to load it every time
-# def load_clip(clip_model="ViT-L/14", use_jit=True, device="cpu"):
-#     clip_model, preprocess = clip.load(clip_model, device=device, jit=use_jit)
-#     return clip_model, preprocess
 
 
 class Predictor(BasePredictor):
@@ -44,7 +43,7 @@ class Predictor(BasePredictor):
         self.options = options
 
         self.model = load_model(self.options, self.device)
-
+        self.model_wrap = CompVisDenoiser(self.model)
 
 
 
@@ -52,7 +51,7 @@ class Predictor(BasePredictor):
     def predict(
         self,
         prompts: str = Input(
-            default="Lust by magritte\nEnvy by magritte",
+            default="Apple by magritte\nBanana by magritte",
             description="model will try to generate this text.",
         ),
         prompt_scale: float = Input(
@@ -69,7 +68,7 @@ class Predictor(BasePredictor):
         ),
     ) -> Path:
         
-        num_frames_per_prompt = min(num_frames_per_prompt, 30)
+        num_frames_per_prompt = min(num_frames_per_prompt, 150)
 
         options = self.options
         options['prompts'] = prompts.split("\n")
@@ -79,13 +78,17 @@ class Predictor(BasePredictor):
         options['scale'] = prompt_scale
         options['seed'] = random_seed
 
-        run_inference(options, self.model, self.device)
+        run_inference(options, self.model, self.model_wrap, self.device)
 
         #if num_frames_per_prompt == 1:
         #    return Path(options['output_path'])     
         encoding_options = "-c:v libx264 -crf 20 -preset slow -vf format=yuv420p -c:a aac -movflags +faststart"
         os.system("ls -l /outputs")
-        os.system(f'ffmpeg -y -r 3 -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
+
+        # calculate the frame rate of the video so that the length is always 8 seconds
+        frame_rate = num_frames_per_prompt / 8
+
+        os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
         return Path("/tmp/z_interpollation.mp4")
 
 def load_model(opt,device):
@@ -130,27 +133,39 @@ def slerp(t, v0, v1, DOT_THRESHOLD=0.9995):
 
     return v2
 
-def diffuse(count_start, start_code, c, batch_size, opt, model, sampler,  outpath):
+def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outpath, device):
     #print("diffusing with batch size", batch_size)
     uc = None
     if opt.scale != 1.0:
         uc = model.get_learned_conditioning(batch_size * [""])
     shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
-    samples_ddim, _ = sampler.sample(S=opt.ddim_steps,
-                                    conditioning=c,
-                                    batch_size=batch_size,
-                                    shape=shape,
-                                    verbose=False,
-                                    unconditional_guidance_scale=opt.scale,
-                                    unconditional_conditioning=uc,
-                                    eta=opt.ddim_eta,
-                                    x_T=start_code)
-    print("samples_ddim", samples_ddim.shape)
-    x_samples_ddim = model.decode_first_stage(samples_ddim)
-    x_samples_ddim = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
+
+    #if args.sampler in ["klms","dpm2","dpm2_ancestral","heun","euler","euler_ancestral"]:
+    samples = sampler_fn(
+        c=c,
+        uc=uc,
+        args=opt,
+        model_wrap=model_wrap,
+        init_latent=start_code,
+        t_enc=0,
+        device=device,
+        # cb=callback
+        )
+    # samples, _ = sampler.sample(S=opt.ddim_steps,
+    #                                 conditioning=c,
+    #                                 batch_size=batch_size,
+    #                                 shape=shape,
+    #                                 verbose=False,
+    #                                 unconditional_guidance_scale=opt.scale,
+    #                                 unconditional_conditioning=uc,
+    #                                 eta=opt.ddim_eta,
+    #                                 x_T=start_code)
+    print("samples_ddim", samples.shape)
+    x_samples = model.decode_first_stage(samples)
+    x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
     if not opt.skip_save:
         count = count_start
-        for x_sample in x_samples_ddim:
+        for x_sample in x_samples:
             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
             Image.fromarray(x_sample.astype(np.uint8)).save(
                 os.path.join(outpath, f"{count:05}.png"))
@@ -159,17 +174,17 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, sampler,  outpat
 
 
 
-def run_inference(opt, model, device):
+def run_inference(opt, model, model_wrap, device):
     """Seperates the loading of the model from the inference
     
     Additionally, slightly modified to display generated images inline
     """
     seed_everything(opt.seed)
 
-    if opt.plms:
-        sampler = PLMSSampler(model)
-    else:
-        sampler = DDIMSampler(model)
+    # if opt.plms:
+    #     sampler = PLMSSampler(model)
+    # else:
+    #     sampler = DDIMSampler(model)
 
     outpath = opt.outdir
     os.makedirs(outpath, exist_ok=True)
@@ -190,7 +205,7 @@ def run_inference(opt, model, device):
     print("embedding prompts")
     cs = [model.get_learned_conditioning(prompt) for prompt in prompts]
 
-    datas = [[batch_size * c] for c in cs]
+    datas = [[batch_size * c] for c in cs] 
 
     run_count = len(os.listdir(outpath)) + 1
 
@@ -231,7 +246,7 @@ def run_inference(opt, model, device):
                     
                             start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
                             for c in tqdm(data, desc="data"):
-                                diffuse(base_count, start_code, c, batch_size, opt, model, sampler, outpath)
+                                diffuse(base_count, start_code, c, batch_size, opt, model, model_wrap, outpath, device)
                                 base_count += 1
 
 
@@ -252,8 +267,10 @@ class WidgetDict2(OrderedDict):
 def get_default_options():
     options = WidgetDict2()
     options['outdir'] ="/outputs"
+    options['sampler'] = "euler"
     options['skip_save'] = False
     options['ddim_steps'] = 50
+    options['steps'] = 10
     options['plms'] = True
     options['laion400m'] = False
     options['ddim_eta'] = 0.0
@@ -266,8 +283,9 @@ def get_default_options():
     options['n_rows'] = 0
     options['from_file'] = None
     options['config'] = "configs/stable-diffusion/v1-inference.yaml"
-    options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-3-full-ema.ckpt"
+    options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
     options['precision'] = "full"  # or "full" "autocast"
+    options['use_init'] = True
     # Extra option for the notebook
     options['display_inline'] = False
     options['audio_smoothing'] = 0.7
