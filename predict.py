@@ -59,8 +59,8 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=40,
-            description="Number of frames to generate per prompt (limited to a maximum of 150 for now).",
+            default=30,
+            description="Number of frames to generate per prompt (limited to a maximum of 100 for now).",
         ),
         random_seed: int = Input(
             default=42,
@@ -270,7 +270,7 @@ def get_default_options():
     options['sampler'] = "euler"
     options['skip_save'] = False
     options['ddim_steps'] = 50
-    options['steps'] = 10
+    options['steps'] = 20
     options['plms'] = True
     options['laion400m'] = False
     options['ddim_eta'] = 0.0
