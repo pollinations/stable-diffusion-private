@@ -59,8 +59,8 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=30,
-            description="Number of frames to generate per prompt (limited to a maximum of 60 for now).",
+            default=6,
+            description="Number of frames to generate per prompt (limited to a maximum of 10 for now because we are experiencing heavy use).",
         ),
         random_seed: int = Input(
             default=42,
@@ -76,8 +76,9 @@ class Predictor(BasePredictor):
         ),
     ) -> Path:
         
-        num_frames_per_prompt = min(num_frames_per_prompt, 60)
+        num_frames_per_prompt = abs(min(num_frames_per_prompt, 20))
 
+        
         options = self.options
         options['prompts'] = prompts.split("\n")
         options['prompts'] = [prompt.strip() for prompt in options['prompts'] if prompt.strip()]
