@@ -60,15 +60,23 @@ class Predictor(BasePredictor):
         ),
         num_frames_per_prompt: int = Input(
             default=30,
-            description="Number of frames to generate per prompt (limited to a maximum of 100 for now).",
+            description="Number of frames to generate per prompt (limited to a maximum of 60 for now).",
         ),
         random_seed: int = Input(
             default=42,
             description="Each seed generates a different image",
         ),
+        width: int = Input(
+            default=512,
+            description="Width of the generated image. The model was really only trained on 512x512 images. Other sizes tend to create less coherent images.",
+        ),
+        height: int = Input(
+            default=512,
+            description="Height of the generated image. The model was really only trained on 512x512 images. Other sizes tend to create less coherent images.",
+        ),
     ) -> Path:
         
-        num_frames_per_prompt = min(num_frames_per_prompt, 150)
+        num_frames_per_prompt = min(num_frames_per_prompt, 60)
 
         options = self.options
         options['prompts'] = prompts.split("\n")
@@ -77,6 +85,8 @@ class Predictor(BasePredictor):
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
         options['seed'] = random_seed
+        options['H'] = height
+        options['W'] = width
 
         run_inference(options, self.model, self.model_wrap, self.device)
 
@@ -270,13 +280,11 @@ def get_default_options():
     options['sampler'] = "euler"
     options['skip_save'] = False
     options['ddim_steps'] = 50
-    options['steps'] = 20
+    options['steps'] = 15
     options['plms'] = True
     options['laion400m'] = False
     options['ddim_eta'] = 0.0
     options['n_iter'] = 1
-    options['H'] = 512
-    options['W'] = 512
     options['C'] = 4
     options['f'] = 8
     options['n_samples'] = 1
