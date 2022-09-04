@@ -59,8 +59,8 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=6,
-            description="Number of frames to generate per prompt (limited to a maximum of 10 for now because we are experiencing heavy use).",
+            default=15,
+            description="Number of frames to generate per prompt (limited to a maximum of 35 for now because we are experiencing heavy use).",
         ),
         random_seed: int = Input(
             default=42,
@@ -76,7 +76,7 @@ class Predictor(BasePredictor):
         ),
     ) -> Path:
         
-        num_frames_per_prompt = abs(min(num_frames_per_prompt, 20))
+        num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
 
         
         options = self.options
@@ -100,6 +100,7 @@ class Predictor(BasePredictor):
         frame_rate = num_frames_per_prompt / 8
 
         os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
+        
         return Path("/tmp/z_interpollation.mp4")
 
 def load_model(opt,device):
