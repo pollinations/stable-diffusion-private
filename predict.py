@@ -106,7 +106,7 @@ class Predictor(BasePredictor):
         # calculate the frame rate of the video so that the length is always 8 seconds
         frame_rate = num_frames_per_prompt / 8
 
-        if len(glob(f"{options['outdir']}/%*.png")) > 3:
+        if len(glob(f"{options['outdir']}/*.png")) > 3:
             os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
             return Path("/tmp/z_interpollation.mp4")
         else:
