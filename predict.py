@@ -10,6 +10,7 @@ import time
 # Code to turn kwargs into Jupyter widgets
 from collections import OrderedDict
 from contextlib import contextmanager, nullcontext
+from glob import glob
 
 import numpy as np
 import torch
@@ -66,6 +67,10 @@ class Predictor(BasePredictor):
             default=42,
             description="Each seed generates a different image",
         ),
+        diffusion_steps: int = Input(
+            default=15,
+            description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 35 (using K-Euler-Diffusion).",
+        ),
         width: int = Input(
             default=512,
             description="Width of the generated image. The model was really only trained on 512x512 images. Other sizes tend to create less coherent images.",
@@ -77,7 +82,7 @@ class Predictor(BasePredictor):
     ) -> Path:
         
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 3))
-
+        diffusion_steps = abs(min(diffusion_steps, 35))
         
         options = self.options
         options['prompts'] = prompts.split("\n")
@@ -88,6 +93,8 @@ class Predictor(BasePredictor):
         options['seed'] = random_seed
         options['H'] = height
         options['W'] = width
+        options['steps'] = diffusion_steps
+
 
         run_inference(options, self.model, self.model_wrap, self.device)
 
@@ -99,9 +106,11 @@ class Predictor(BasePredictor):
         # calculate the frame rate of the video so that the length is always 8 seconds
         frame_rate = num_frames_per_prompt / 8
 
-        os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
-        
-        return Path("/tmp/z_interpollation.mp4")
+        if len(glob(f"{options['outdir']}/%*.png")) > 3:
+            os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
+            return Path("/tmp/z_interpollation.mp4")
+        else:
+            return None
 
 def load_model(opt,device):
     """Seperates the loading of the model from the inference"""
@@ -282,7 +291,6 @@ def get_default_options():
     options['sampler'] = "euler"
     options['skip_save'] = False
     options['ddim_steps'] = 50
-    options['steps'] = 15
     options['plms'] = True
     options['laion400m'] = False
     options['ddim_eta'] = 0.0
