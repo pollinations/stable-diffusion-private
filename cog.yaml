@@ -53,6 +53,7 @@ build:
     - git clone https://github.com/openai/CLIP
     - git clone https://github.com/deforum/k-diffusion
     - pip install jsonmerge clean-fid resize-right torchdiffeq
+    - pip install translate
 
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"

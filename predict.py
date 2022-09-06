@@ -24,6 +24,7 @@ from pytorch_lightning import seed_everything
 from torch import autocast
 #from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
 from tqdm import tqdm, trange  # NOTE: updated for notebook
+from translate import Translator
 
 from helpers import sampler_fn, save_samples
 from ldm.models.diffusion.ddim import DDIMSampler
@@ -46,14 +47,14 @@ class Predictor(BasePredictor):
         self.model = load_model(self.options, self.device)
         self.model_wrap = CompVisDenoiser(self.model)
 
-
+        self.translator= Translator(to_lang="en")
 
     @torch.inference_mode()
     def predict(
         self,
         prompts: str = Input(
             default="Apple by magritte\nBanana by magritte",
-            description="model will try to generate this text.",
+            description="model will try to generate this text. New! Write in any language.",
         ),
         prompt_scale: float = Input(
             default=5.0,
@@ -80,13 +81,15 @@ class Predictor(BasePredictor):
             description="Height of the generated image. The model was really only trained on 512x512 images. Other sizes tend to create less coherent images.",
         ),
     ) -> Path:
+
+        translation ="This is a pen.")
         
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
         diffusion_steps = abs(min(diffusion_steps, 35))
         
         options = self.options
         options['prompts'] = prompts.split("\n")
-        options['prompts'] = [prompt.strip() for prompt in options['prompts'] if prompt.strip()]
+        options['prompts'] = [self.translator.translate(prompt.strip()) for prompt in options['prompts'] if prompt.strip()]
         
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
