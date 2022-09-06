@@ -81,7 +81,7 @@ class Predictor(BasePredictor):
         ),
     ) -> Path:
         
-        num_frames_per_prompt = abs(min(num_frames_per_prompt, 3))
+        num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
         diffusion_steps = abs(min(diffusion_steps, 35))
         
         options = self.options
