@@ -15,7 +15,7 @@ from glob import glob
 import numpy as np
 import torch
 from cog import BasePredictor, Input, Path
-from einops import rearrange
+from einops import rearrange, repeat
 from k_diffusion import sampling
 from k_diffusion.external import CompVisDenoiser
 from omegaconf import OmegaConf
@@ -80,10 +80,16 @@ class Predictor(BasePredictor):
             default=512,
             description="Height of the generated image. The model was really only trained on 512x512 images. Other sizes tend to create less coherent images.",
         ),
+        init_image: Path = Input(
+            default=None, 
+            description="input image"),
+        init_image_strength: float = Input(
+            default=0.7,
+            description="How strong to apply the input image. 0 means disregard the input image mostly and 1 copies the image exactly. Values in between are interesting.")
     ) -> Path:
-
-        translation ="This is a pen.")
         
+        if init_image is not None:
+            init_image = str(init_image)
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
         diffusion_steps = abs(min(diffusion_steps, 35))
         
@@ -97,7 +103,9 @@ class Predictor(BasePredictor):
         options['H'] = height
         options['W'] = width
         options['steps'] = diffusion_steps
-
+        options['init_image'] = init_image
+        options['init_image_strength'] = init_image_strength
+        
 
         run_inference(options, self.model, self.model_wrap, self.device)
 
@@ -162,8 +170,10 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
     uc = None
     if opt.scale != 1.0:
         uc = model.get_learned_conditioning(batch_size * [""])
-    shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
 
+    t_enc = 0
+    if opt.init_image is not None:
+        t_enc = round(opt.steps * opt.init_image_strength)
     #if args.sampler in ["klms","dpm2","dpm2_ancestral","heun","euler","euler_ancestral"]:
     samples = sampler_fn(
         c=c,
@@ -171,7 +181,7 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
         args=opt,
         model_wrap=model_wrap,
         init_latent=start_code,
-        t_enc=0,
+        t_enc=t_enc,
         device=device,
         # cb=callback
         )
@@ -214,8 +224,6 @@ def run_inference(opt, model, model_wrap, device):
     os.makedirs(outpath, exist_ok=True)
 
     batch_size = opt.n_samples
-
-    
     prompts = opt.prompts
 
     
@@ -240,15 +248,23 @@ def run_inference(opt, model, model_wrap, device):
     start_code_a = None
     start_code_b = None
     
-    start_code_a = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
-    start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+
 
     # If more than one prompt we only interpolate the text conditioning
     if not single_prompt:
         start_code_b = start_code_a
-        
-    precision_scope = autocast if opt.precision=="autocast" else nullcontext
+
+    if opt.init_image:
+        init_image = load_img(opt.init_image, shape=(opt.W, opt.H)).to(device)
+        init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
+        start_code_a = model.get_first_stage_encoding(model.encode_first_stage(init_image))     
+        start_code_b = start_code_a
+    else:
+        start_code_a = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+        start_code_b = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
     audio_intensity = 0
+
+    precision_scope = autocast if opt.precision=="autocast" else nullcontext
 
     with torch.no_grad():
         with precision_scope("cuda"):
@@ -311,3 +327,16 @@ def get_default_options():
     options['display_inline'] = False
     options['audio_smoothing'] = 0.7
     return options
+
+
+def load_img(path, shape):
+    if path.startswith('http://') or path.startswith('https://'):
+        image = Image.open(requests.get(path, stream=True).raw).convert('RGB')
+    else:
+        image = Image.open(path).convert('RGB')
+
+    image = image.resize(shape, resample=Image.LANCZOS)
+    image = np.array(image).astype(np.float32) / 255.0
+    image = image[None].transpose(0, 3, 1, 2)
+    image = torch.from_numpy(image)
+    return 2.*image - 1.

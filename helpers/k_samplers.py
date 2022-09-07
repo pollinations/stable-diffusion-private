@@ -36,7 +36,14 @@ def sampler_fn(
     sigmas: torch.Tensor = model_wrap.get_sigmas(args.steps)
     print("sigmas", sigmas)
     if args.use_init:
-        x = init_latent * sigmas[0]
+        if args.init_image is None:
+            x = init_latent * sigmas[0]
+        else:
+            sigmas = sigmas[len(sigmas) - t_enc - 1 :]
+            x = (
+                init_latent
+                 + torch.randn([args.n_samples, *shape], device=device) * sigmas[0]
+            )
     else:
         x = torch.randn([args.n_samples, *shape], device=device) * sigmas[0]
     sampler_args = {
