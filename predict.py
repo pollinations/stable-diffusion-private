@@ -90,6 +90,7 @@ class Predictor(BasePredictor):
         
         if init_image is not None:
             init_image = str(init_image)
+            print("using init image", init_image)
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
         diffusion_steps = abs(min(diffusion_steps, 35))
         
@@ -174,6 +175,7 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
     t_enc = 0
     if opt.init_image is not None:
         t_enc = round(opt.steps * opt.init_image_strength)
+    print("using init image", opt.init_image, "for", t_enc, "steps")
     #if args.sampler in ["klms","dpm2","dpm2_ancestral","heun","euler","euler_ancestral"]:
     samples = sampler_fn(
         c=c,
