@@ -61,8 +61,8 @@ class Predictor(BasePredictor):
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
-            default=10,
-            description="Number of frames to generate per prompt (limited to a maximum of 35 for now because we are experiencing heavy use).",
+            default=4,
+            description="Number of frames to generate per prompt (limited to a maximum of 7 for now because we are experiencing heavy use).",
         ),
         random_seed: int = Input(
             default=42,
@@ -70,7 +70,7 @@ class Predictor(BasePredictor):
         ),
         diffusion_steps: int = Input(
             default=15,
-            description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 35 (using K-Euler-Diffusion).",
+            description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 25 (using K-Euler-Diffusion).",
         ),
         width: int = Input(
             default=512,
@@ -91,8 +91,8 @@ class Predictor(BasePredictor):
         if init_image is not None:
             init_image = str(init_image)
             print("using init image", init_image)
-        num_frames_per_prompt = abs(min(num_frames_per_prompt, 35))
-        diffusion_steps = abs(min(diffusion_steps, 35))
+        num_frames_per_prompt = abs(min(num_frames_per_prompt, 7))
+        diffusion_steps = abs(min(diffusion_steps, 25))
         
         options = self.options
         options['prompts'] = prompts.split("\n")
