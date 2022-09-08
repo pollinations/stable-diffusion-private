@@ -97,7 +97,8 @@ class Predictor(BasePredictor):
         options = self.options
         options['prompts'] = prompts.split("\n")
         options['prompts'] = [self.translator.translate(prompt.strip()) for prompt in options['prompts'] if prompt.strip()]
-        
+        print("translated prompts", options['prompts'])
+
         options['num_interpolation_steps'] = num_frames_per_prompt
         options['scale'] = prompt_scale
         options['seed'] = random_seed
