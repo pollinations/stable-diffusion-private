@@ -16,6 +16,7 @@ import numpy as np
 import torch
 from cog import BasePredictor, Input, Path
 from einops import rearrange, repeat
+from googletrans import Translator
 from k_diffusion import sampling
 from k_diffusion.external import CompVisDenoiser
 from omegaconf import OmegaConf
@@ -24,7 +25,6 @@ from pytorch_lightning import seed_everything
 from torch import autocast
 #from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
 from tqdm import tqdm, trange  # NOTE: updated for notebook
-from translate import Translator
 
 from helpers import sampler_fn, save_samples
 from ldm.models.diffusion.ddim import DDIMSampler
@@ -47,7 +47,7 @@ class Predictor(BasePredictor):
         self.model = load_model(self.options, self.device)
         self.model_wrap = CompVisDenoiser(self.model)
 
-        self.translator= Translator(to_lang="en")
+        self.translator= Translator()
 
     @torch.inference_mode()
     def predict(
@@ -96,7 +96,7 @@ class Predictor(BasePredictor):
         
         options = self.options
         options['prompts'] = prompts.split("\n")
-        options['prompts'] = [self.translator.translate(prompt.strip()) for prompt in options['prompts'] if prompt.strip()]
+        options['prompts'] = [self.translator.translate(prompt.strip()).text for prompt in options['prompts'] if prompt.strip()]
         print("translated prompts", options['prompts'])
 
         options['num_interpolation_steps'] = num_frames_per_prompt
