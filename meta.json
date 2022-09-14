@@ -6,7 +6,7 @@
     "img": "https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif",
     "id2pop": "1 Disco Diffusion",
     "path": "stablediffusion",
-    "category": "0 Featured",
+    "category": "2 Text-To-Video",
     "credits": "[Stability.AI](https://stability.ai/)",
     "description": "<img src=\"https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif\" width=\"300\" height=\"300\" />\n\n\n\nMake animations with Stable Diffusion. It moves from one prompt to the text over time.",
     "pollinator_group": [
