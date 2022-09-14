@@ -70,7 +70,7 @@ class Predictor(BasePredictor):
         ),
         diffusion_steps: int = Input(
             default=15,
-            description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 25 (using K-Euler-Diffusion).",
+            description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 30 (using K-Euler-Diffusion).",
         ),
         width: int = Input(
             default=512,
@@ -92,7 +92,7 @@ class Predictor(BasePredictor):
             init_image = str(init_image)
             print("using init image", init_image)
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 15))
-        diffusion_steps = abs(min(diffusion_steps, 25))
+        diffusion_steps = abs(min(diffusion_steps, 30))
         
         options = self.options
         options['prompts'] = prompts.split("\n")
@@ -175,7 +175,7 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
 
     t_enc = 0
     if opt.init_image is not None:
-        t_enc = round(opt.steps * opt.init_image_strength)
+        t_enc = round(opt.steps * (1.0 - opt.init_image_strength))
     print("using init image", opt.init_image, "for", t_enc, "steps")
     #if args.sampler in ["klms","dpm2","dpm2_ancestral","heun","euler","euler_ancestral"]:
     samples = sampler_fn(
@@ -273,7 +273,7 @@ def run_inference(opt, model, model_wrap, device):
         with precision_scope("cuda"):
             with model.ema_scope():
                 tic = time.time()
-                for n in trange(opt.n_iter, desc="Sampling"):
+                for n in trange(opt.n_iter):
                     for data_a,data_b in zip(datas,datas[1:]):          
                         for t in np.linspace(0, 1, opt.num_interpolation_steps):
                             #print("data_a",data_a)
@@ -288,7 +288,7 @@ def run_inference(opt, model, model_wrap, device):
                             noise_t = t * t_max                         
                     
                             start_code = slerp(float(noise_t), start_code_a, start_code_b) #slerp(audio_intensity, start_code_a, start_code_b)
-                            for c in tqdm(data, desc="data"):
+                            for c in data:
                                 diffuse(base_count, start_code, c, batch_size, opt, model, model_wrap, outpath, device)
                                 base_count += 1
 
