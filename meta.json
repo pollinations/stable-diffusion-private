@@ -2,13 +2,13 @@
     "featured": true,
     "url": "pollinations/stable-diffusion-private",
     "key": "614871946825.dkr.ecr.us-east-1.amazonaws.com/pollinations/stable-diffusion-private",
-    "name": "Stable Diffusion - Animation",
+    "name": "Stable Diffusion Animation",
     "img": "https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif",
     "id2pop": "1 Disco Diffusion",
     "path": "stablediffusion",
     "category": "2 Text-To-Video",
     "credits": "[Stability.AI](https://stability.ai/)",
-    "description": "<img src=\"https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif\" width=\"300\" height=\"300\" />\n\n\n\nMake animations with Stable Diffusion. It moves from one prompt to the text over time.",
+    "description": "<img src=\"https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif\" width=\"300\" height=\"300\" />\n\n\n\n*\"Orange Fruit, in style of digital painting. Man standing, in style of digital painting.\"*\n\n\n\nMake animations with Stable Diffusion. Create an animation interpolating from one prompt to the text over time.",
     "pollinator_group": [
         "T4-stable-diffusion", "A10", "A10-2"
     ]
