@@ -8,7 +8,7 @@
     "path": "stablediffusion",
     "category": "2 Text-To-Video",
     "credits": "[Stability.AI](https://stability.ai/)",
-    "description": "<img src=\"https://s4.gifyu.com/images/ezgif.com-gif-maker4faa2b37cd286f60.gif\" width=\"300\" height=\"300\" />\n\n\n\n*\"Orange Fruit, in style of digital painting. Man standing, in style of digital painting.\"*\n\n\n\nMake animations with Stable Diffusion. Create an animation interpolating from one prompt to the text over time.",
+    "description": "<img src=\"https://i.imgur.com/Vkk1o9n.gif\" width=\"300\" height=\"300\" />\n\n\n\n*\"Envy in the style of Magritte. Despair in the style of Magritte. Pleasure in the style of Dali. rRegret in the style of Munch\"*\n\n\n\nCreate an animation interpolating from one prompt to the next over time.",    
     "pollinator_group": [
         "T4-stable-diffusion", "A10", "A10-2"
     ]
