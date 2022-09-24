@@ -237,6 +237,10 @@ def run_inference(opt, model, model_wrap, device):
         prompts = prompts + [prompts[0]]
 
 
+    # duplicate last prompt if we are generating one image per prompt
+    if not single_prompt and opt.num_interpolation_steps == 1:
+        datas.append(datas[-1])
+
     print("embedding prompts")
     cs = [model.get_learned_conditioning(prompt) for prompt in prompts]
 
