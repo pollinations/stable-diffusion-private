@@ -232,10 +232,13 @@ def run_inference(opt, model, model_wrap, device):
     
     # add first prompt to end to create a video for single prompts or no inteprolations
     single_prompt = False
-    if len(prompts) == 1 or opt.num_interpolation_steps == 1:
+    if len(prompts) == 1:
         single_prompt = True
         prompts = prompts + [prompts[0]]
 
+
+    if (not single_prompt) and (opt.num_interpolation_steps == 1):
+        prompts = prompts + [prompts[-1]]
 
     print("embedding prompts")
     cs = [model.get_learned_conditioning(prompt) for prompt in prompts]
