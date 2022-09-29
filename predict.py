@@ -69,7 +69,7 @@ class Predictor(BasePredictor):
             description="Each seed generates a different image",
         ),
         diffusion_steps: int = Input(
-            default=15,
+            default=25,
             description="Number of diffusion steps. Higher steps could produce better results but will take longer to generate. Maximum 30 (using K-Euler-Diffusion).",
         ),
         width: int = Input(
@@ -92,7 +92,7 @@ class Predictor(BasePredictor):
             init_image = str(init_image)
             print("using init image", init_image)
         num_frames_per_prompt = abs(min(num_frames_per_prompt, 15))
-        diffusion_steps = abs(min(diffusion_steps, 30))
+        diffusion_steps = abs(min(diffusion_steps, 40))
         
         options = self.options
         options['prompts'] = prompts.split("\n")
@@ -204,8 +204,9 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
         count = count_start
         for x_sample in x_samples:
             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-            Image.fromarray(x_sample.astype(np.uint8)).save(
-                os.path.join(outpath, f"{count:05}.png"))
+            image_path = os.path.join(outpath, f"{count:05}.png")
+            prompt_path = image_path = os.path.join(outpath, f"{count:05}.txt")
+            Image.fromarray(x_sample.astype(np.uint8)).save(image_path)
             count += 1
     
 
