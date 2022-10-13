@@ -208,7 +208,7 @@ def diffuse(count_start, start_code, c, batch_size, opt, model, model_wrap, outp
         for x_sample in x_samples:
             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
             image_path = os.path.join(outpath, f"{count:05}.png")
-            prompt_path = image_path = os.path.join(outpath, f"{count:05}.txt")
+            prompt_path = os.path.join(outpath, f"{count:05}.txt")
             Image.fromarray(x_sample.astype(np.uint8)).save(image_path)
             count += 1
     
