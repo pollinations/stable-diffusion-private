@@ -17,20 +17,19 @@ import torch
 from cog import BasePredictor, Input, Path
 from einops import rearrange, repeat
 from googletrans import Translator
+from helpers import sampler_fn, save_samples
 from k_diffusion import sampling
 from k_diffusion.external import CompVisDenoiser
-from omegaconf import OmegaConf
-from PIL import Image
-from pytorch_lightning import seed_everything
-from torch import autocast
-#from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
-from tqdm import tqdm, trange  # NOTE: updated for notebook
-
-from helpers import sampler_fn, save_samples
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 from ldm.util import instantiate_from_config
+from omegaconf import OmegaConf
+from PIL import Image
+from pytorch_lightning import seed_everything
 from scripts.txt2img import chunk, load_model_from_config
+from torch import autocast
+#from tqdm.auto import tqdm, trange  # NOTE: updated for notebook
+from tqdm import tqdm, trange  # NOTE: updated for notebook
 
 
 class Predictor(BasePredictor):
@@ -44,9 +43,13 @@ class Predictor(BasePredictor):
         options = get_default_options()
         self.options = options
 
-        self.model = load_model(self.options, self.device)
-        self.model_wrap = CompVisDenoiser(self.model)
-
+        options['ckpt'] ="/stable-diffusion-checkpoints/Redshift-WD12-SD14-NAI-FMD.ckpt"
+        self.model_redshift = load_model(self.options, self.device)
+        self.model_wrap_redshift = CompVisDenoiser(self.model_redshift)
+        options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
+        self.model_vanilla = load_model(self.options, self.device)
+        self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
+        os.system("nvidia-smi")
         self.translator= Translator()
 
     @torch.inference_mode()
@@ -56,8 +59,13 @@ class Predictor(BasePredictor):
             default="Apple by magritte\nBanana by magritte",
             description="model will try to generate this text. New! Write in any language.",
         ),
+        model: str = Input(
+            description='stable diffusion model. redshift was fine-tuned and is better at certain styles',
+            default='vanilla',
+            choices=['vanilla', 'redshift']        
+        ),  
         prompt_scale: float = Input(
-            default=5.0,
+            default=15.0,
             description="Determines influence of your prompt on generation.",
         ),
         num_frames_per_prompt: int = Input(
@@ -84,7 +92,7 @@ class Predictor(BasePredictor):
             default=None, 
             description="input image"),
         init_image_strength: float = Input(
-            default=0.7,
+            default=0.3,
             description="How strong to apply the input image. 0 means disregard the input image mostly and 1 copies the image exactly. Values in between are interesting.")
     ) -> Path:
         
@@ -108,8 +116,14 @@ class Predictor(BasePredictor):
         options['init_image'] = init_image
         options['init_image_strength'] = init_image_strength
         
+        if model == 'redshift':
+            model = self.model_redshift
+            model_wrap = self.model_wrap_redshift
+        else:
+            model = self.model_vanilla
+            model_wrap = self.model_wrap_vanilla
 
-        run_inference(options, self.model, self.model_wrap, self.device)
+        run_inference(options, model, model_wrap, self.device)
 
         #if num_frames_per_prompt == 1:
         #    return Path(options['output_path'])     
@@ -331,7 +345,6 @@ def get_default_options():
     options['n_rows'] = 0
     options['from_file'] = None
     options['config'] = "configs/stable-diffusion/v1-inference.yaml"
-    options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
     options['precision'] = "full"  # or "full" "autocast"
     options['use_init'] = True
     # Extra option for the notebook
