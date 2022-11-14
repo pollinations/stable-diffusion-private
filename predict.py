@@ -43,10 +43,10 @@ class Predictor(BasePredictor):
         options = get_default_options()
         self.options = options
 
-        options['ckpt'] ="/stable-diffusion-checkpoints/Redshift-WD12-SD14-NAI-FMD.ckpt"
+        self.options['ckpt'] ="/stable-diffusion-checkpoints/Redshift-WD12-SD14-NAI-FMD.ckpt"
         self.model_redshift = load_model(self.options, self.device)
         self.model_wrap_redshift = CompVisDenoiser(self.model_redshift)
-        options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
+        self.options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
         self.model_vanilla = load_model(self.options, self.device)
         self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
         os.system("nvidia-smi")
