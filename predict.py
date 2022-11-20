@@ -43,9 +43,9 @@ class Predictor(BasePredictor):
         options = get_default_options()
         self.options = options
 
-        self.options['ckpt'] ="/stable-diffusion-checkpoints/Redshift-WD12-SD14-NAI-FMD.ckpt"
-        self.model_redshift = load_model(self.options, self.device)
-        self.model_wrap_redshift = CompVisDenoiser(self.model_redshift)
+        self.options['ckpt'] ="/stable-diffusion-checkpoints/nitroDiffusion-v1.ckpt"
+        self.model_nitrosocke = load_model(self.options, self.device)
+        self.model_wrap_nitrosocke = CompVisDenoiser(self.model_nitrosocke)
         self.options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
         self.model_vanilla = load_model(self.options, self.device)
         self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
@@ -60,9 +60,9 @@ class Predictor(BasePredictor):
             description="model will try to generate this text. New! Write in any language.",
         ),
         model: str = Input(
-            description='stable diffusion model. redshift was fine-tuned and is better at certain styles',
+            description='stable diffusion model. nitrosocke was fine-tuned and is better at certain styles',
             default='vanilla',
-            choices=['vanilla', 'redshift']        
+            choices=['vanilla', 'nitrosocke']        
         ),  
         prompt_scale: float = Input(
             default=15.0,
@@ -116,9 +116,9 @@ class Predictor(BasePredictor):
         options['init_image'] = init_image
         options['init_image_strength'] = init_image_strength
         
-        if model == 'redshift':
-            model = self.model_redshift
-            model_wrap = self.model_wrap_redshift
+        if model == 'nitrosocke':
+            model = self.model_nitrosocke
+            model_wrap = self.model_wrap_nitrosocke
         else:
             model = self.model_vanilla
             model_wrap = self.model_wrap_vanilla
