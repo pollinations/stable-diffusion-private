@@ -46,7 +46,7 @@ class Predictor(BasePredictor):
         self.options['ckpt'] ="/stable-diffusion-checkpoints/nitroDiffusion-v1.ckpt"
         self.model_nitrosocke = load_model(self.options, self.device)
         self.model_wrap_nitrosocke = CompVisDenoiser(self.model_nitrosocke)
-        self.options['ckpt'] ="/stable-diffusion-checkpoints/sd-v1-4.ckpt"
+        self.options['ckpt'] ="/stable-diffusion-checkpoints/v1-5-pruned-emaonly.ckpt"
         self.model_vanilla = load_model(self.options, self.device)
         self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
         os.system("nvidia-smi")
