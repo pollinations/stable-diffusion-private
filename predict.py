@@ -46,9 +46,9 @@ class Predictor(BasePredictor):
         self.options['ckpt'] ="/stable-diffusion-checkpoints/nitroDiffusion-v1.ckpt"
         self.model_nitrosocke = load_model(self.options, self.device)
         self.model_wrap_nitrosocke = CompVisDenoiser(self.model_nitrosocke)
-        self.options['ckpt'] ="/stable-diffusion-checkpoints/v1-5-pruned-emaonly.ckpt"
-        self.model_vanilla = load_model(self.options, self.device)
-        self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
+        # self.options['ckpt'] ="/stable-diffusion-checkpoints/v1-5-pruned-emaonly.ckpt"
+        # self.model_vanilla = load_model(self.options, self.device)
+        # self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
         os.system("nvidia-smi")
         self.translator= Translator()
 
@@ -59,11 +59,11 @@ class Predictor(BasePredictor):
             default="Apple by magritte\nBanana by magritte",
             description="model will try to generate this text. New! Write in any language.",
         ),
-        model: str = Input(
-            description='stable diffusion model. nitrosocke was fine-tuned and is better at certain styles',
-            default='vanilla',
-            choices=['vanilla', 'nitrosocke']        
-        ),  
+        # model: str = Input(
+        #     description='stable diffusion model. nitrosocke was fine-tuned and is better at certain styles',
+        #     default='vanilla',
+        #     choices=['vanilla', 'nitrosocke']        
+        # ),  
         prompt_scale: float = Input(
             default=15.0,
             description="Determines influence of your prompt on generation.",
@@ -96,6 +96,7 @@ class Predictor(BasePredictor):
             description="How strong to apply the input image. 0 means disregard the input image mostly and 1 copies the image exactly. Values in between are interesting.")
     ) -> Path:
         
+        model = 'nitrosocke'
         if init_image is not None:
             init_image = str(init_image)
             print("using init image", init_image)
