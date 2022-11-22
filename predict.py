@@ -43,12 +43,12 @@ class Predictor(BasePredictor):
         options = get_default_options()
         self.options = options
 
-        self.options['ckpt'] ="/stable-diffusion-checkpoints/nitroDiffusion-v1.ckpt"
-        self.model_nitrosocke = load_model(self.options, self.device)
-        self.model_wrap_nitrosocke = CompVisDenoiser(self.model_nitrosocke)
-        # self.options['ckpt'] ="/stable-diffusion-checkpoints/v1-5-pruned-emaonly.ckpt"
-        # self.model_vanilla = load_model(self.options, self.device)
-        # self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
+        # self.options['ckpt'] ="/stable-diffusion-checkpoints/nitroDiffusion-v1.ckpt"
+        # self.model_nitrosocke = load_model(self.options, self.device)
+        # self.model_wrap_nitrosocke = CompVisDenoiser(self.model_nitrosocke)
+        self.options['ckpt'] ="/stable-diffusion-checkpoints/v1-5-pruned-emaonly.ckpt"
+        self.model_vanilla = load_model(self.options, self.device)
+        self.model_wrap_vanilla = CompVisDenoiser(self.model_vanilla)
         os.system("nvidia-smi")
         self.translator= Translator()
 
@@ -96,7 +96,7 @@ class Predictor(BasePredictor):
             description="How strong to apply the input image. 0 means disregard the input image mostly and 1 copies the image exactly. Values in between are interesting.")
     ) -> Path:
         
-        model = 'nitrosocke'
+        model = 'vanilla'
         if init_image is not None:
             init_image = str(init_image)
             print("using init image", init_image)
