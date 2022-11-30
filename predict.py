@@ -136,12 +136,9 @@ class Predictor(BasePredictor):
 
         if len(glob(f"{options['outdir']}/*.png")) > 4:
             os.system(f'ffmpeg -y -r {frame_rate} -i {options["outdir"]}/%*.png {encoding_options} /tmp/z_interpollation.mp4')
-            # time.sleep(30)
             return Path("/tmp/z_interpollation.mp4")
         else:
             return None
-
-
 
 def load_model(opt,device):
     """Seperates the loading of the model from the inference"""
@@ -274,6 +271,11 @@ def run_inference(opt, model, model_wrap, device):
     start_code_b = None
     
 
+
+    # If more than one prompt we only interpolate the text conditioning
+    if not single_prompt:
+        start_code_b = start_code_a
+
     if opt.init_image:
         init_image = load_img(opt.init_image, shape=(opt.W, opt.H)).to(device)
         init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
@@ -286,12 +288,6 @@ def run_inference(opt, model, model_wrap, device):
 
     precision_scope = autocast if opt.precision=="autocast" else nullcontext
 
-
-    # If more than one prompt we only interpolate the text conditioning
-    if not single_prompt:
-        start_code_b = start_code_a
-
-        
     with torch.no_grad():
         with precision_scope("cuda"):
             with model.ema_scope():
