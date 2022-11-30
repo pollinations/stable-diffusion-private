@@ -48,8 +48,7 @@ build:
     - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
     - apt-get install git-lfs
     # - git clone https://huggingface.co/nitrosocke/Nitro-Diffusion /stable-diffusion-checkpoints
-    - cd /stable-diffusion-checkpoints && gdown 1qSa4Ig09KUrWNYaTC_zMZTQfkeWAarB_
-    - pip install notebook
+    - mkdir /stable-diffusion-checkpoints && cd /stable-diffusion-checkpoints && wget https://pollinations-models.s3.amazonaws.com/v1-5-pruned-emaonly.ckpt
     - git clone https://github.com/CompVis/taming-transformers
     - git clone https://github.com/openai/CLIP
     - git clone https://github.com/deforum/k-diffusion

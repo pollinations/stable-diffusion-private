@@ -1,3 +1,6 @@
+from transformers import logging
+
+logging.set_verbosity_error()
 import sys
 
 sys.path.append("/CLIP")
@@ -244,6 +247,7 @@ def run_inference(opt, model, model_wrap, device):
 
     outpath = opt.outdir
     os.makedirs(outpath, exist_ok=True)
+    # os.system("rm -rf " + outpath + "/*")
 
     batch_size = opt.n_samples
     prompts = opt.prompts
