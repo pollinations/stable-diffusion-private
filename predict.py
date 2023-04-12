@@ -333,7 +333,7 @@ class WidgetDict2(OrderedDict):
 def get_default_options():
     options = WidgetDict2()
     options['outdir'] ="/outputs"
-    options['sampler'] = "euler_ancestral"
+    options['sampler'] = "euler"
     options['skip_save'] = False
     options['ddim_steps'] = 50
     options['plms'] = True
